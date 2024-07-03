@@ -4,12 +4,13 @@
 bool detectCycles(int size, int* next_town) {
     bool* visited = calloc(size, sizeof(bool));
     bool* stack = calloc(size, sizeof(bool));
+    bool cycle = false;
 
-    for (int start = 0; start < size; start++) {
+    for (int start = 0; start < size && !cycle; start++) {
         if (visited[start]) continue;
 
         int current = start;
-        while (current != -1 && !visited[current]) {
+        while (current != -1 && !visited[current] && !cycle) {
             visited[current] = true;
             stack[current] = true;
             int next = next_town[current];
@@ -19,10 +20,7 @@ bool detectCycles(int size, int* next_town) {
                     current = next;
                 } else if (stack[next]) {
                     // Cycle detected
-
-                    free(stack);
-                    free(visited);
-                    return true;
+                    cycle = true;
                 }
             } else {
                 current = next;
@@ -38,7 +36,7 @@ bool detectCycles(int size, int* next_town) {
     }
     free(stack);
     free(visited);
-    return false;
+    return cycle;
 }
 
 bool createsSubTour(int size, int* next_town, int start_index, int start_value) {
@@ -79,7 +77,7 @@ float min_rows(int size, float* d) {
     {
         float local_eval = 0.0;
 #ifdef OPENMP
-#pragma omp for private(i) schedule(dynamic, NUM_TASKS_PER_THREAD)
+#pragma omp for private(i) schedule(static, NUM_TASKS_PER_THREAD(size))
 #endif
         for (i = 0; i < size; i++) {
             float minl = -1;
@@ -119,7 +117,7 @@ float min_cols(int size, float* d) {
     {
         float local_eval = 0.0;
 #ifdef OPENMP
-#pragma omp for private(j) schedule(dynamic, NUM_TASKS_PER_THREAD)
+#pragma omp for private(j) schedule(static, NUM_TASKS_PER_THREAD(size))
 #endif
         for (j = 0; j < size; j++) {
             float minc = -1;
@@ -153,11 +151,11 @@ float min_cols(int size, float* d) {
 /**
  *  Little Algorithm
  */
-void little_algorithm(int size, float* dist, float* baseDist, int iteration, float eval_node_parent, int* best_solution, float* best_eval, int* next_town) {
+void little_algorithm(int size, float* dist, float* baseDist, int iteration, float eval_node_parent, int* best_solution, float* best_eval, int* next_town, configuration_t config) {
     // int myIteration = nbit++;
     if (iteration == size) {
         // bool best = 
-        build_solution(size, baseDist, next_town, best_solution, best_eval);
+        build_solution(size, baseDist, next_town, best_solution, best_eval, config);
         // fprintf(f, "node%d [label=\"S%d-%d\n(%.2f)\", %s];\n", myIteration, myIteration, iteration, eval_node_parent, best ? "color=limegreen" : "color=lightblue");
         // return myIteration;
         free(dist);
@@ -196,7 +194,7 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
     int i,j,k;
 
 #ifdef OPENMP
-#pragma omp parallel for collapse(2) private(i, j) shared(max_penalty, izero, jzero) schedule(dynamic, NUM_TASKS_PER_THREAD)
+#pragma omp parallel for collapse(2) private(i, j) shared(max_penalty, izero, jzero) schedule(static, NUM_TASKS_PER_THREAD(size))
 #endif
     for (i = 0; i < size; i++) {
         for (j = 0; j < size; j++) {
@@ -204,7 +202,7 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
                 float min_row = -1;
                 float min_col = -1;
 #ifdef OPENMP
-// #pragma omp parallel for private(k) schedule(dynamic, NUM_TASKS_PER_THREAD)
+// #pragma omp parallel for private(k) schedule(static, NUM_TASKS_PER_THREAD(size))
 #endif
                 for (k = 0; k < size; k++) {
                     float valik = d[i * size + k];
@@ -259,7 +257,7 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
     free(d);
 
 #ifdef OPENMP
-#pragma omp parallel for private(k) schedule(dynamic, NUM_TASKS_PER_THREAD)
+#pragma omp parallel for private(k) schedule(static, NUM_TASKS_PER_THREAD(size))
 #endif
     for (k = 0; k < size; k++) {
         d2[izero * size + k] = -1;
@@ -270,7 +268,7 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
     /* Explore left child node according to given choice */
     
     // int choice = 
-    little_algorithm(size, d2, baseDist, iteration + 1, eval_node_child, best_solution, best_eval, next_town);
+    little_algorithm(size, d2, baseDist, iteration + 1, eval_node_child, best_solution, best_eval, next_town, config);
     // fprintf(f, "node%d -> node%d;\n", myIteration, choice);
 
 
@@ -278,7 +276,7 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
     d3[izero * size + jzero] = -1;
 
     // int nochoice = 
-    little_algorithm(size, d3, baseDist, iteration, eval_node_child, best_solution, best_eval, next_town);
+    little_algorithm(size, d3, baseDist, iteration, eval_node_child, best_solution, best_eval, next_town, config);
     // fprintf(f, "node%d -> node%d;\n", myIteration, nochoice);
 
     // return myIteration;

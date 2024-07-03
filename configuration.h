@@ -3,17 +3,19 @@
 
 #include <ctype.h>
 #include <getopt.h>
+#include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "util.h"
+
+#define STR_MAX_LEN 1024
 
 
 typedef struct {
     char filename[STR_MAX_LEN];
-    uint8_t number_of_cities;
-    bool parallel;
-    uint8_t number_of_threads;
-    uint8_t number_of_tasks_per_thread;
+    uint16_t number_of_cities;
     bool is_verbose;
 } configuration_t;
 

@@ -150,7 +150,7 @@ void print_solution(int size, int* sol, float eval) {
     printf("\n");
 }
 
-bool build_solution(int size, float* dist, int* next_town, int* best_solution, float* best_eval) {
+bool build_solution(int size, float* dist, int* next_town, int* best_solution, float* best_eval, configuration_t config) {
     int i;
     int* solution = (int *)calloc(size, sizeof(int));
 
@@ -177,9 +177,10 @@ bool build_solution(int size, float* dist, int* next_town, int* best_solution, f
         *best_eval = eval;
         for (i = 0; i < size; i++)
             best_solution[i] = solution[i];
-
-        printf("New best solution: ");
-        print_solution(size, solution, *best_eval);
+        if (config.is_verbose) {
+            printf("New best solution: ");
+            print_solution(size, solution, *best_eval);
+        }
         free(solution);
         return true;
     }

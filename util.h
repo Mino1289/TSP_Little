@@ -6,11 +6,12 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "configuration.h"
 
-#define STR_MAX_LEN 1024
 
 void readTSPFile(char *filename, int size, float** coords);
 
@@ -28,6 +29,6 @@ float evaluation_solution(int size, int* sol, float* dist);
 
 void print_solution(int size, int* sol, float eval);
 
-bool build_solution(int size, float* dist, int* next_town, int* best_solution, float* best_eval);
+bool build_solution(int size, float* dist, int* next_town, int* best_solution, float* best_eval, configuration_t config);
 
 #endif

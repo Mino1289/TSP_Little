@@ -1,13 +1,11 @@
 #include <time.h>
 #include <omp.h>
 
-#include "configuration.h"
 #include "util.h"
+#include "configuration.h"
 #include "little.h"
 
 
-#define NUM_THREADS 2
-#define NUM_TASKS_PER_THREAD (NBR_TOWNS / NUM_THREADS)
 
 /**
  * Berlin52 :
@@ -40,44 +38,29 @@ int main(int argc, char *argv[]) {
     configuration_t config = {
         .filename = "",
         .number_of_cities = 0,
-        .parallel = false,
-        .number_of_threads = 0,
-        .number_of_tasks_per_thread = 0,
         .is_verbose = false
     };
 
     make_configuration(&config, argv, argc);
 
     if (!is_configuration_valid(&config)) {
-        printf("\nUsage: %s -r <filename> -n <number_of_cities> -t <number_of_threads> -k <number_of_tasks_per_thread> [-v] [-p] -f <config-file>\n", argv[0]);
+        printf("\nUsage: %s -r <filename> -n <number_of_cities> [-v] -f <config-file>\n", argv[0]);
         display_configuration(&config);
         printf("\nExiting\n");
         return -1;
     }
 
-#ifndef OPENMP
-    if (config.parallel) {
-        fprintf(stderr, "ERROR: OPENMP not defined, can't run in parallel\n");
-        return -1;
-    }
-#endif
-
 #ifdef OPENMP
-    if (config.parallel && OPENMP) {
-        if (config.number_of_threads == 0) {
-            config.number_of_threads = NUM_THREADS;
-        }
-        if (config.number_of_tasks_per_thread == 0) {
-            config.number_of_tasks_per_thread = NUM_TASKS_PER_THREAD;
-        }
-    }
+    omp_set_num_threads(NUM_THREADS);
 #endif
 
-    if (config.is_verbose)
+    if (config.is_verbose) {
         display_configuration(&config);
-
-    // strcpy(config.filename, "data/berlin52.tsp");
-    // config.number_of_cities = 6;
+#ifdef OPENMP
+        printf("Number of threads: %d\n", NUM_THREADS);
+        printf("Number of tasks per thread: %d\n", NUM_TASKS_PER_THREAD(config.number_of_cities));
+#endif
+    }
 
 
     int size = config.number_of_cities;
@@ -114,7 +97,7 @@ int main(int argc, char *argv[]) {
     float lowerbound = 0.0;
 
     time_t start = time(NULL);
-    (void)little_algorithm(size, dist, distNoModif, iteration, lowerbound, best_solution, &best_eval, next_town);
+    (void)little_algorithm(size, dist, distNoModif, iteration, lowerbound, best_solution, &best_eval, next_town, config);
     time_t end = time(NULL);
 
     // fprintf(f, "}\n");
