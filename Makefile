@@ -8,6 +8,7 @@ ifdef N
 endif
 endif
 
+all: little
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) -o $@ $<
@@ -15,9 +16,9 @@ endif
 littleR: littleR.o
 	$(CC) $(CFLAGS) -o $@ $^
 
-main: main.o configuration.o util.o little.o
+little: main.o configuration.o util.o little.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 
 clean:
-	rm -f *.o littleR main
+	rm -f *.o littleR little main.exe

@@ -2,64 +2,65 @@
 
 
 bool detectCycles(int size, int* next_town) {
-    bool* visited = calloc(size, sizeof(bool));
-    bool* stack = calloc(size, sizeof(bool));
     bool cycle = false;
 
-    for (int start = 0; start < size && !cycle; start++) {
-        if (visited[start]) continue;
+#ifdef OPENMP
+#pragma omp parallel
+#endif
+    {
+        bool* visited = calloc(size, sizeof(bool));
+        bool* stack = calloc(size, sizeof(bool));
 
-        int current = start;
-        while (current != -1 && !visited[current] && !cycle) {
-            visited[current] = true;
-            stack[current] = true;
-            int next = next_town[current];
+#ifdef OPENMP
+#pragma omp for schedule(static, NUM_TASKS_PER_THREAD(size)) reduction(||:cycle)
+#endif
+        for (int start = 0; start < size; start++) {
+            if (visited[start]) continue;
 
-            if (next != -1) {
-                if (!visited[next]) {
+            int current = start;
+            while (current != -1 && !visited[current] && !cycle) {
+                visited[current] = true;
+                stack[current] = true;
+                int next = next_town[current];
+
+                if (next != -1) {
+                    if (!visited[next]) {
+                        current = next;
+                    } else if (stack[next]) {
+                        // Cycle detected
+                        cycle = true;
+                    }
+                } else {
                     current = next;
-                } else if (stack[next]) {
-                    // Cycle detected
-                    cycle = true;
                 }
-            } else {
-                current = next;
+            }
+
+            // Clear stack
+            current = start;
+            while (current != -1 && stack[current]) {
+                stack[current] = false;
+                current = next_town[current];
             }
         }
-
-        // Clear stack
-        current = start;
-        while (current != -1 && stack[current]) {
-            stack[current] = false;
-            current = next_town[current];
-        }
+        free(stack);
+        free(visited);
     }
-    free(stack);
-    free(visited);
     return cycle;
 }
 
+// making it work correctly.
 bool createsSubTour(int size, int* next_town, int start_index, int start_value) {
     bool* visited = calloc(size, sizeof(bool));
-    int current = start_index;
-    
+    int current = start_value;
+
     while (current != -1 && !visited[current]) {
-        visited[current] = true;
-        int next = next_town[current];
-        
-        // Check if the current position forms a loop back to start_value
-        if (next == start_value) {
+        if (current == start_index || visited[current]) {
+            // Cycle detected
             free(visited);
             return true;
         }
-        
-        current = next;
-    }
-    
-    // Check if adding start_value directly creates a new sub-tour
-    if (next_town[start_index] == -1 && start_value != start_index && start_value == next_town[start_value]) {
-        free(visited);
-        return true;
+        visited[current] = true;
+        current = next_town[current];
     }
 
     free(visited);
@@ -152,20 +153,15 @@ float min_cols(int size, float* d) {
  *  Little Algorithm
  */
 void little_algorithm(int size, float* dist, float* baseDist, int iteration, float eval_node_parent, int* best_solution, float* best_eval, int* next_town, configuration_t config) {
-    // int myIteration = nbit++;
     if (iteration == size) {
         // bool best = 
         build_solution(size, baseDist, next_town, best_solution, best_eval, config);
-        // fprintf(f, "node%d [label=\"S%d-%d\n(%.2f)\", %s];\n", myIteration, myIteration, iteration, eval_node_parent, best ? "color=limegreen" : "color=lightblue");
-        // return myIteration;
         free(dist);
         return;
     }
 
     bool cycle = detectCycles(size, next_town);
     if (cycle) {
-        // fprintf(f, "node%d [label=\"S%d-%d\n(%.2f)\" color=red];\n", myIteration, myIteration, iteration, eval_node_child);
-        // return myIteration;
         free(dist);
         return;
     }
@@ -181,9 +177,7 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
     eval_node_child += min_cols(size, d);
 
     /* Cut : stop the exploration of this node */
-    if (*best_eval >= 0 && eval_node_child >= *best_eval) {
-        // fprintf(f, "node%d [label=\"S%d-%d\n(%.2f)\" color=red];\n", myIteration, myIteration, iteration, eval_node_child);
-        // return myIteration;
+    if (*best_eval >= 0 && eval_node_child > *best_eval) {
         free(d);
         return;
     }
@@ -198,7 +192,7 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
 #endif
     for (i = 0; i < size; i++) {
         for (j = 0; j < size; j++) {
-            if (d[i * size + j] == 0 && !createsSubTour(size, next_town, i, j)) {
+            if (d[i * size + j] == 0) {
                 float min_row = -1;
                 float min_col = -1;
 #ifdef OPENMP
@@ -208,10 +202,10 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
                     float valik = d[i * size + k];
                     float valkj = d[k * size + j];
 
-                    if (k != j && valik >= 0 && (min_row < 0 || valik < min_row)) {
+                    if (k != j && valik >= 0 && (valik < min_row || min_row < 0)) {
                         min_row = valik;
                     }
-                    if (k != i && valkj >= 0 && (min_col < 0 || valkj < min_col)) {
+                    if (k != i && valkj >= 0 && (valkj < min_col || min_col < 0)) {
                         min_col = valkj;
                     }
                 }
@@ -238,15 +232,12 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
 // #pragma omp barrier
 #endif
     if (izero < 0 || jzero < 0) {
-        // fprintf(f, "node%d [label=\"S%d-%d\n(%.2f)\" color=red];\n", myIteration, myIteration, iteration, eval_node_child);
-        // return myIteration;
         free(d);
         return;
     }
-    // fprintf(f, "node%d [label=\"S%d-%d\n(%.2f)\"];\n", myIteration, myIteration, iteration, eval_node_child);
 
     next_town[izero] = jzero;
-  
+
     /* Do the modification on a copy of the distance matrix */
     float* d2 = malloc(size * size * sizeof(float));
     memcpy(d2, d, size * size * sizeof(float));
@@ -267,18 +258,12 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
 
     /* Explore left child node according to given choice */
     
-    // int choice = 
     little_algorithm(size, d2, baseDist, iteration + 1, eval_node_child, best_solution, best_eval, next_town, config);
-    // fprintf(f, "node%d -> node%d;\n", myIteration, choice);
-
 
     next_town[izero] = -1;
     d3[izero * size + jzero] = -1;
 
-    // int nochoice = 
     little_algorithm(size, d3, baseDist, iteration, eval_node_child, best_solution, best_eval, next_town, config);
-    // fprintf(f, "node%d -> node%d;\n", myIteration, nochoice);
 
-    // return myIteration;
     return;
 }

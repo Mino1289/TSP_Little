@@ -21,14 +21,14 @@
  * 50 towns : (8804.23) -> Best solution (7256.569): 0 48 31 44 18 40 7 8 9 42 32 10 12 13 46 25 26 27 11 24 3 5 14 4 23 47 37 36 39 38 35 34 33 43 45 15 28 49 19 22 29 1 6 41 20 16 2 17 30 21
  * 52 towns : (8980.91) -> Best solution (7544.366): 0 48 31 44 18 40 7 8 9 42 32 50 10 51 13 12 46 25 26 27 11 24 3 5 14 4 23 47 37 36 39 38 35 34 33 43 45 15 28 49 19 22 29 1 6 41 20 16 2 17 30 21
  * A280 :
- * 280 towns : (4148.110) -> Best solution ?
+ * 280 towns : (3148.110) -> Best solution ?
  * eil76:
  * 25 towns : (352.980) -> Best solution (294.016): 0 22 15 2 23 17 24 8 9 10 13 18 7 6 11 16 5 1 3 12 14 19 4 20 21
  * 50 towns : (417.722) -> Best solution (390.602): 0 21 27 20 46 35 36 19 14 12 26 44 28 4 47 29 1 5 32 15 2 43 31 39 11 16 25 3 33 45 7 6 34 18 13 10 37 9 30 38 8 24 49 17 23 48 22 40 41 42
  * 76 towns : (711.993) -> Best solution (544.369): 0 72 61 21 63 41 42 40 55 22 48 23 17 49 24 54 30 9 37 64 65 10 58 13 52 6 34 7 18 53 12 56 14 4 36 19 69 59 70 68 35 46 20 60 27 73 1 29 47 28 44 26 51 45 33 66 25 75 74 3 67 5 50 16 39 11 57 71 38 8 31 43 2 15 62 32
  * KroA100 :
  * 25 towns : (13600.286) -> Best solution (11780.631): 0 24 1 12 4 13 2 8 6 11 19 22 14 16 10 20 9 23 17 21 15 3 18 5 7
- * 50 towns : (22642.936) -> Best solution ?
+ * 50 towns : (22642.936) -> Best solution (16461.459): 0 46 27 24 39 1 43 49 12 32 36 4 38 29 47 40 13 2 42 45 28 33 8 6 19 11 26 34 22 44 31 10 14 16 20 9 35 37 23 17 21 15 18 3 25 30 41 7 48 5
  * 75 towns : (28513.000) -> Best solution ?
  * 100 towns : (26856.389) -> Best solution ?
  */
@@ -38,13 +38,14 @@ int main(int argc, char *argv[]) {
     configuration_t config = {
         .filename = "",
         .number_of_cities = 0,
-        .is_verbose = false
+        .is_verbose = false,
+        .init = false
     };
 
     make_configuration(&config, argv, argc);
 
     if (!is_configuration_valid(&config)) {
-        printf("\nUsage: %s -r <filename> -n <number_of_cities> [-v] -f <config-file>\n", argv[0]);
+        printf("\nUsage: %s -r <filename> -n <number_of_cities> [-v] [-i] -f <config-file>\n", argv[0]);
         display_configuration(&config);
         printf("\nExiting\n");
         return -1;
@@ -59,6 +60,7 @@ int main(int argc, char *argv[]) {
 #ifdef OPENMP
         printf("Number of threads: %d\n", NUM_THREADS);
         printf("Number of tasks per thread: %d\n", NUM_TASKS_PER_THREAD(config.number_of_cities));
+        printf("\n");
 #endif
     }
 
@@ -92,6 +94,10 @@ int main(int argc, char *argv[]) {
     }    
     
     initial_solution(size, dist, best_solution, &best_eval);
+
+    if (config.init) {
+        return 0;
+    }
 
     int iteration = 0;
     float lowerbound = 0.0;

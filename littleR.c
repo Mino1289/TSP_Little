@@ -14,7 +14,7 @@
 #include <omp.h>
 
 #define BIG_VALUE 1e9
-#define NBR_TOWNS 60
+#define NBR_TOWNS 20
 
 #ifdef OPENMP
 #ifndef NUM_THREADS
@@ -900,13 +900,13 @@ int little_algorithm(float d0[NBR_TOWNS][NBR_TOWNS], int iteration, float eval_n
     if (iteration == NBR_TOWNS) {
         bool best = build_solution(myIteration);
         // fprintf(f, "node%d [label=\"S%d-%d\n(%.2f)\", %s];\n", myIteration, myIteration, iteration, eval_node_parent, best ? "color=limegreen" : "color=lightblue");
-        // return myIteration;
-        return;
+        return myIteration;
+        // return;
     }
 
     CycleResult cycle = detectCycles();
     if (cycle.cycle_detected) {
-        // fprintf(f, "node%d [label=\"S%d-%d\n(%.2f)\" color=red];\n", myIteration, myIteration, iteration, eval_node_child);
+        // fprintf(f, "node%d [label=\"S%d-%d\n(%.2f)\" color=red];\n", myIteration, myIteration, iteration, eval_node_parent);
         return myIteration;
     }
 
@@ -998,7 +998,7 @@ int little_algorithm(float d0[NBR_TOWNS][NBR_TOWNS], int iteration, float eval_n
     /* Explore left child node according to given choice */
     
     int choice = little_algorithm(d2, iteration + 1, eval_node_child);
-    // fprintf(f, "node%d -> node%d;\n", myIteration, choice);
+    // fprintf(f, "node%d -> node%d [label=\"%d --> %d\"];\n", myIteration, choice, izero, jzero);
 
     /* Do the modification on a copy of the distance matrix */
     memcpy(d2, d, NBR_TOWNS * NBR_TOWNS * sizeof(float));
@@ -1007,7 +1007,7 @@ int little_algorithm(float d0[NBR_TOWNS][NBR_TOWNS], int iteration, float eval_n
     d2[izero][jzero] = -1;
 
     int nochoice = little_algorithm(d2, iteration, eval_node_child);
-    // fprintf(f, "node%d -> node%d;\n", myIteration, nochoice);
+    // fprintf(f, "node%d -> node%d [label=\"%d x-> %d\"];\n", myIteration, nochoice, izero, jzero);
 
     return myIteration;
 }
@@ -1036,7 +1036,7 @@ int main(int argc, char* argv[]) {
         
 
     /* initial solution */
-    float initial_value = initial_solution();
+    // float initial_value = initial_solution();
     // evolution[0] = (ValueIndex) { .value = initial_value, .index = 0 };
 
     /** Little : uncomment when needed

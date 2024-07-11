@@ -95,6 +95,15 @@ int find_nearest_unvisited(int current_town, int size, bool* visited, float* dis
     return nearest_town;
 }
 
+void reverse(int size, int* solution, int i, int j) {
+    while (i < j) {
+        int temp = solution[i];
+        solution[i] = solution[j];
+        solution[j] = temp;
+        i++;
+        j--;
+    }
+}
 
 /**
  * initial solution
@@ -117,6 +126,23 @@ float initial_solution(int size, float* dist, int* best_solution, float *best_ev
     }
 
     eval = evaluation_solution(size, sol, dist);
+
+    for (int i = 1; i < size; i++) {
+        for (int j = i + 1; j < size; j++) {
+            if (((i != 0) || (j != size - 1)) && ((i != 0) || (j != size - 2))) {
+                reverse(size, sol, i, j);
+                
+                float new_eval = evaluation_solution(size, sol, dist);
+                if (new_eval < eval) {
+                    eval = new_eval;
+                } else {
+                    reverse(size, sol, i, j);
+                }
+            }
+        }
+    }
+
+
     printf("Initial solution ");
     print_solution(size, sol, eval);
 
@@ -177,6 +203,7 @@ bool build_solution(int size, float* dist, int* next_town, int* best_solution, f
         *best_eval = eval;
         for (i = 0; i < size; i++)
             best_solution[i] = solution[i];
+            
         if (config.is_verbose) {
             printf("New best solution: ");
             print_solution(size, solution, *best_eval);
