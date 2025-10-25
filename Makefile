@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -pedantic -O3 -lm -ggdb -fopenmp
+CFLAGS = -Wall -pedantic -O3 -lm -ggdb -march=native
 
 ifdef OMP
 	CFLAGS += -fopenmp -DOPENMP

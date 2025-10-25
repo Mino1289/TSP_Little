@@ -33,6 +33,18 @@
  * 100 towns : (26856.389) -> Best solution ?
  */
 
+/** comp seq / omp
+ * eil76 50 towns test case seq: 37s vs omp: N2: 54s N4: 26s N8: 21s N16: 13s N24: 15s N32: 10s
+ * eil76 55 towns test case seq: 447s vs omp: N2: N4: 689s N8: 58s N16: 145s
+ * eil76 60 towns test case seq:  vs omp: N8: 
+ * 
+ * kroA100 40 towns test case seq: 130s vs omp:N8: 246s N16: 44s N24: 76s
+ * a280 35 towns test case seq: 73s vs omp: N4: 146s N8: 126s N16: 94s N24: 76s N32: 84s
+ * 
+ * NO THREADS DEPTH LIMIT
+ * berlin52 30 towns test case seq: 553s vs omp: N4: N8: 413s N16: 245s N24: 326s N32: 362s
+ */
+
 int main(int argc, char *argv[]) {
 
     configuration_t config = {
@@ -59,7 +71,7 @@ int main(int argc, char *argv[]) {
         display_configuration(&config);
 #ifdef OPENMP
         printf("Number of threads: %d\n", NUM_THREADS);
-        printf("Number of tasks per thread: %d\n", NUM_TASKS_PER_THREAD(config.number_of_cities));
+        //printf("Number of tasks per thread: %d\n", NUM_TASKS_PER_THREAD(config.number_of_cities));
         printf("\n");
 #endif
     }
@@ -103,7 +115,15 @@ int main(int argc, char *argv[]) {
     float lowerbound = 0.0;
 
     time_t start = time(NULL);
-    (void)little_algorithm(size, dist, distNoModif, iteration, lowerbound, best_solution, &best_eval, next_town, config);
+#ifdef OPENMP
+#pragma omp parallel
+#endif
+    {
+#ifdef OPENMP
+#pragma omp single
+#endif
+    little_algorithm(size, dist, distNoModif, iteration, lowerbound, best_solution, &best_eval, next_town, config);
+    }
     time_t end = time(NULL);
 
     // fprintf(f, "}\n");
@@ -117,7 +137,7 @@ int main(int argc, char *argv[]) {
     // printf("Number of visited nodes: %d\n", nbit-NBR_TOWNS+2);
 
     free(best_solution);
-    free(next_town);
+    // free(next_town);
     for (int i = 0; i < size; i++) {
         free(coord[i]);
     }

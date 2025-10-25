@@ -198,19 +198,25 @@ bool build_solution(int size, float* dist, int* next_town, int* best_solution, f
     }
 
     float eval = evaluation_solution(size, solution, dist);
+    bool found_best_solution = false;
 
-    if (*best_eval < 0 || eval < *best_eval) {
-        *best_eval = eval;
-        for (i = 0; i < size; i++)
+#ifdef OPENMP
+#pragma omp critical
+#endif
+    {
+
+        if (*best_eval < 0 || eval < *best_eval) {
+            *best_eval = eval;
+            for (i = 0; i < size; i++)
             best_solution[i] = solution[i];
             
-        if (config.is_verbose) {
-            printf("New best solution: ");
-            print_solution(size, solution, *best_eval);
+            if (config.is_verbose) {
+                printf("New best solution: ");
+                print_solution(size, solution, *best_eval);
+                found_best_solution = true;
+            }
         }
-        free(solution);
-        return true;
     }
     free(solution);
-    return false;
+    return found_best_solution;
 }

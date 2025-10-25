@@ -3,17 +3,10 @@
 
 bool detectCycles(int size, int* next_town) {
     bool cycle = false;
-
-#ifdef OPENMP
-#pragma omp parallel
-#endif
     {
         bool* visited = calloc(size, sizeof(bool));
         bool* stack = calloc(size, sizeof(bool));
 
-#ifdef OPENMP
-#pragma omp for schedule(static, NUM_TASKS_PER_THREAD(size)) reduction(||:cycle)
-#endif
         for (int start = 0; start < size; start++) {
             if (visited[start]) continue;
 
@@ -72,14 +65,8 @@ float min_rows(int size, float* d) {
     float current_eval = 0.0;
     int i, j;
 
-#ifdef OPENMP
-#pragma omp parallel
-#endif
     {
         float local_eval = 0.0;
-#ifdef OPENMP
-#pragma omp for private(i) schedule(static, NUM_TASKS_PER_THREAD(size))
-#endif
         for (i = 0; i < size; i++) {
             float minl = -1;
             for (j = 0; j < size; j++) {
@@ -97,14 +84,8 @@ float min_rows(int size, float* d) {
                 }
             }
         }
-#ifdef OPENMP
-#pragma omp atomic
-#endif
         current_eval += local_eval;
     }
-#ifdef OPENMP
-// #pragma omp barrier
-#endif
     return current_eval;
 }
 
@@ -112,14 +93,8 @@ float min_cols(int size, float* d) {
     float current_eval = 0.0;
     int i, j;
 
-#ifdef OPENMP
-#pragma omp parallel 
-#endif
     {
         float local_eval = 0.0;
-#ifdef OPENMP
-#pragma omp for private(j) schedule(static, NUM_TASKS_PER_THREAD(size))
-#endif
         for (j = 0; j < size; j++) {
             float minc = -1;
             for (i = 0; i < size; i++) {
@@ -137,15 +112,9 @@ float min_cols(int size, float* d) {
                 }
             }
         }
-#ifdef OPENMP
-#pragma omp atomic
-#endif
         current_eval += local_eval;
     }
 
-#ifdef OPENMP
-// #pragma omp barrier
-#endif
     return current_eval;
 }
 
@@ -157,12 +126,14 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
         // bool best = 
         build_solution(size, baseDist, next_town, best_solution, best_eval, config);
         free(dist);
+        free(next_town);
         return;
     }
 
     bool cycle = detectCycles(size, next_town);
     if (cycle) {
         free(dist);
+        free(next_town);
         return;
     }
 
@@ -172,32 +143,28 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
     free(dist);
 
     float eval_node_child = eval_node_parent;
- 
+
     eval_node_child += min_rows(size, d);
     eval_node_child += min_cols(size, d);
 
     /* Cut : stop the exploration of this node */
     if (*best_eval >= 0 && eval_node_child > *best_eval) {
         free(d);
+        free(next_town);
         return;
     }
 
     /* row and column of the zero with the max penalty */
     int izero = -1, jzero = -1;
     float max_penalty = -1;
-    int i,j,k;
+    int i, j, k;
 
-#ifdef OPENMP
-#pragma omp parallel for collapse(2) private(i, j) shared(max_penalty, izero, jzero) schedule(static, NUM_TASKS_PER_THREAD(size))
-#endif
     for (i = 0; i < size; i++) {
         for (j = 0; j < size; j++) {
             if (d[i * size + j] == 0) {
                 float min_row = -1;
                 float min_col = -1;
-#ifdef OPENMP
-// #pragma omp parallel for private(k) schedule(static, NUM_TASKS_PER_THREAD(size))
-#endif
+
                 for (k = 0; k < size; k++) {
                     float valik = d[i * size + k];
                     float valkj = d[k * size + j];
@@ -214,9 +181,6 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
                     min_col = BIG_VALUE;
                 }
                 float penalty = min_row + min_col;
-#ifdef OPENMP
-#pragma omp critical
-#endif 
                 {
                     if (penalty > max_penalty) {
                         max_penalty = penalty;
@@ -228,42 +192,56 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
         }
     }
 
-#ifdef OPENMP
-// #pragma omp barrier
-#endif
     if (izero < 0 || jzero < 0) {
         free(d);
+        free(next_town);
         return;
     }
 
-    next_town[izero] = jzero;
-
-    /* Do the modification on a copy of the distance matrix */
+    
     float* d2 = malloc(size * size * sizeof(float));
     memcpy(d2, d, size * size * sizeof(float));
     
     float* d3 = malloc(size * size * sizeof(float));
     memcpy(d3, d, size * size * sizeof(float));
-
+    
     free(d);
-
-#ifdef OPENMP
-#pragma omp parallel for private(k) schedule(static, NUM_TASKS_PER_THREAD(size))
-#endif
+    // D2
     for (k = 0; k < size; k++) {
         d2[izero * size + k] = -1;
         d2[k * size + jzero] = -1;
     }
-    d2[jzero * size + izero] = -1; // si B -> A alors A -> B interdit
+    d2[jzero * size + izero] = -1;
+    // D3
+    d3[izero * size + jzero] = -1; 
 
-    /* Explore left child node according to given choice */
+    int* next_town_child1 = malloc(size * sizeof(int));
+    memcpy(next_town_child1, next_town, size * sizeof(int));
+    next_town_child1[izero] = jzero;
+
+    int* next_town_child2 = malloc(size * sizeof(int));
+    memcpy(next_town_child2, next_town, size * sizeof(int));
+    next_town_child2[izero] = -1;
     
-    little_algorithm(size, d2, baseDist, iteration + 1, eval_node_child, best_solution, best_eval, next_town, config);
+    free(next_town);
 
-    next_town[izero] = -1;
-    d3[izero * size + jzero] = -1;
+#ifdef OPENMP
+#pragma omp task //if (iteration < size / 2)
+#endif
+    {
+        little_algorithm(size, d2, baseDist, iteration + 1, eval_node_child, best_solution, best_eval, next_town_child1, config);
+    }
 
-    little_algorithm(size, d3, baseDist, iteration, eval_node_child, best_solution, best_eval, next_town, config);
-
+#ifdef OPENMP
+#pragma omp task //if (iteration < size / 2)
+#endif
+    {
+        little_algorithm(size, d3, baseDist, iteration, eval_node_child, best_solution, best_eval, next_town_child2, config);
+    }
+    
+    #ifdef OPENMP
+    #pragma omp taskwait // On attend que les deux branches aient fini leur exploration
+    #endif
+    
     return;
 }
