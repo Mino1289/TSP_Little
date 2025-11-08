@@ -31,15 +31,18 @@ Where:
 ```
 ### Multi-thread version
 
-Great for large instances of TSP.
-The first results better than single threaded are above 76 cities (e.g. eil76)
+Great for large instances of TSP. Or not...  
+For now I don't know how to get a floor size to start multi-threading neither for the depth of the tree.  
+
+A good way to see improvement: eil76 and 50 towns.  
+More testing need to be done, and in main.c there is a comparison between seq and omp.
 
 #### Compilation
 ```bash
 make OMP=1 N=n -j2
 ```
 Where:
-- N=n is the number of threads to use, default is 2.
+- N=n is the number of threads to use. I recommand the number of CPUs on your system.
 
 #### Execution
 ```bash
@@ -54,5 +57,23 @@ As in the single thread version.
 
 ## Results
 
-All Berlin52 and eil76 instances computes in less than 7 hours. (less with less cities).  
-For KroA100 and a280 instances, above 40 cities, it starts to takes some times.
+All Berlin52 and eil76 instances computes in approximately 3 hours.  
+
+Time (in seconds) of compute for n cities in different datasets.
+| n | berlin52 | eil76 | kroA100 | a280  |
+| :--- | -------- | ----- | ------- | ----- |
+| 6    | 0        | 0     | 0       | 0     |
+| 10   | 0        | 0     | 0       | 0     |
+| 15   | 0        | 0     | 0       | 0     |
+| 20   | 1        | 0     | 0       | 1     |
+| 25   | 3        | 0     | 1       | 1     |
+| 30   | 553      | 0     | 4       | 3     |
+| 35   | 2        | 2     | 19      | 79    |
+| 40   | 2        | 1     | 144     | 19721 |
+| 45   | 507      | 6     | 10267   | x     |
+| 50   | 9431     | 35    | 71626   | x     |
+| 52   | 10946    | 271   | x       | x     |
+| 55   | /        | 443   | x       | x     |
+| 60   | /        | 1508  | x       | x     |
+| 70   | /        | 36580 | x       | x     |
+| 76   | /        | 12493 | x       | x     |
