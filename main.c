@@ -31,6 +31,38 @@
  * 50 towns : (22642.936) -> Best solution (16461.459): 0 46 27 24 39 1 43 49 12 32 36 4 38 29 47 40 13 2 42 45 28 33 8 6 19 11 26 34 22 44 31 10 14 16 20 9 35 37 23 17 21 15 18 3 25 30 41 7 48 5
  * 75 towns : (28513.000) -> Best solution ?
  * 100 towns : (26856.389) -> Best solution ?
+ * 
+ * fr_cities (119):
+ * 10 towns : (2602.658) -> Best solution:(2602.658): 0 9 7 2 4 1 6 3 8 5 
+ * 15 towns : (2874.698) -> Best solution:(2846.292): 0 14 10 5 8 3 6 1 11 4 13 2 7 12 9 
+ * 20 towns : (3044.063) -> Best solution:(3015.657): 0 14 10 17 5 8 3 6 19 1 11 4 16 13 2 18 15 7 12 9 
+ * 25 towns : (3755.859) -> Best solution:(3694.875): 0 9 12 7 15 21 13 2 18 16 4 11 1 20 19 6 3 8 5 23 10 17 24 22 14 
+ * 30 towns : (4444.908) -> Best solution:(3874.178): 0 25 9 12 28 7 15 21 13 2 18 26 16 4 11 1 20 19 6 3 8 27 24 22 17 5 10 23 14 29 
+ * 35 towns : (4562.645) -> Best solution:(4152.320): 0 29 33 14 23 10 5 17 22 32 24 27 8 3 30 6 19 20 1 11 4 16 26 18 2 13 21 15 31 7 28 12 9 25 34 
+ * 40 towns : (4416.683) -> Best solution:(4215.666): 0 35 34 25 9 12 28 39 7 38 31 15 21 13 2 18 26 16 4 11 1 20 19 6 30 3 8 27 24 32 22 17 5 23 10 36 14 33 37 29 
+ * 45 towns : (4752.446)
+ * 50 towns : (4966.106)
+ * 52 towns : (5225.797)
+ * 55 towns : (5493.776)
+ * 60 towns : (5485.392)
+ * 70 towns : (5936.410)
+ * 76 towns : (6547.050)
+ * 80 towns : (6154.652)
+ * 90 towns : (6171.761)
+ * 100 towns : (6437.714)
+ * 119 towns : (6857.121) -> Best solution ?
+ */
+
+/** comp seq / omp
+ * eil76 50 towns test case seq: 37s vs omp: N2: 54s N4: 26s N8: 21s N16: 13s N24: 15s N32: 10s
+ * eil76 55 towns test case seq: 447s vs omp: N2: N4: 689s N8: 58s N16: 145s
+ * eil76 60 towns test case seq:  vs omp: N8: 
+ * 
+ * kroA100 40 towns test case seq: 130s vs omp:N8: 246s N16: 44s N24: 76s
+ * a280 35 towns test case seq: 73s vs omp: N4: 146s N8: 126s N16: 94s N24: 76s N32: 84s
+ * 
+ * NO THREADS DEPTH LIMIT
+ * berlin52 30 towns test case seq: 553s vs omp: N4: N8: 413s N16: 245s N24: 326s N32: 362s
  */
 
 int main(int argc, char *argv[]) {
@@ -59,7 +91,7 @@ int main(int argc, char *argv[]) {
         display_configuration(&config);
 #ifdef OPENMP
         printf("Number of threads: %d\n", NUM_THREADS);
-        printf("Number of tasks per thread: %d\n", NUM_TASKS_PER_THREAD(config.number_of_cities));
+        //printf("Number of tasks per thread: %d\n", NUM_TASKS_PER_THREAD(config.number_of_cities));
         printf("\n");
 #endif
     }
@@ -103,7 +135,15 @@ int main(int argc, char *argv[]) {
     float lowerbound = 0.0;
 
     time_t start = time(NULL);
-    (void)little_algorithm(size, dist, distNoModif, iteration, lowerbound, best_solution, &best_eval, next_town, config);
+#ifdef OPENMP
+#pragma omp parallel
+#endif
+    {
+#ifdef OPENMP
+#pragma omp single
+#endif
+    little_algorithm(size, dist, distNoModif, iteration, lowerbound, best_solution, &best_eval, next_town, config);
+    }
     time_t end = time(NULL);
 
     // fprintf(f, "}\n");
@@ -117,7 +157,7 @@ int main(int argc, char *argv[]) {
     // printf("Number of visited nodes: %d\n", nbit-NBR_TOWNS+2);
 
     free(best_solution);
-    free(next_town);
+    // free(next_town);
     for (int i = 0; i < size; i++) {
         free(coord[i]);
     }

@@ -7,7 +7,7 @@
 
 #ifdef OPENMP
 #ifndef NUM_THREADS
-#define NUM_THREADS 2
+#define NUM_THREADS 4
 #endif
 #define TASKS(n) ((n) / NUM_THREADS)
 
