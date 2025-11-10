@@ -63,6 +63,9 @@ bool directory_exists(char *path) {
 
 void compute_matrix(int size, float** coord, float* d) {
     int i, j;
+#ifdef OPENMP
+#pragma omp parallel for private(j) if(size > 10000)
+#endif
     for (i = 0; i < size; i++) {
         float xi = coord[i][0];
         float yi = coord[i][1];
