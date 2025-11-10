@@ -39,16 +39,16 @@ More testing need to be done, and in main.c there is a comparison between seq an
 
 #### Compilation
 ```bash
-make OMP=1 N=n -j2
+make OMP=1 [N=n] -j2
 ```
 Where:
-- N=n is the number of threads to use. I recommand the number of CPUs on your system.
+- N=n is the number of threads to use. I recommand the number of CPUs on your system not mandatory
 
 #### Execution
 ```bash
-./little -r <filename> -n <number_of_cities> [-v] [-i]
+./little -r <filename> -n <number_of_cities> [-v] [-i] -t <num_threads>
 ```
-As in the single thread version.
+As in the single thread version and the number of threads to use.
 
 #### Example
 ```bash

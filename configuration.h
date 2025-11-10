@@ -18,6 +18,7 @@ typedef struct configuration {
     uint16_t number_of_cities;
     bool init;
     bool is_verbose;
+    uint16_t num_threads;
 } configuration_t;
 
 configuration_t *make_configuration(configuration_t *base_configuration, char *argv[], int argc);
