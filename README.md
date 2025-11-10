@@ -58,7 +58,7 @@ As in the single thread version.
 ## Results
 
 All Berlin52 and eil76 instances computes in approximately 3 hours.  
-
+(Sequential)
 Time (in seconds) of compute for n cities in different datasets.
 | n | berlin52 | eil76 | kroA100 | a280  |
 | :--- | -------- | ----- | ------- | ----- |
