@@ -49,7 +49,7 @@ float best_eval = -1.0;
 int nbit = 0;
 // int nbevol = 0;
 
-// FILE *f = NULL;
+FILE *f = NULL;
 
 
 /**
@@ -81,135 +81,135 @@ int nbit = 0;
 float coord[NBR_TOWNS][2] =
 {
     // Berlin52
-    // {565.0, 575.0},
-    // {25.0, 185.0},
-    // {345.0, 750.0},
-    // {945.0, 685.0},
-    // {845.0, 655.0},
-    // {880.0, 660.0},
-    // {25.0, 230.0},
-    // {525.0, 1000.0},
-    // {580.0, 1175.0},
-    // {650.0, 1130.0},
-    // {1605.0, 620.0}, 
-    // {1220.0, 580.0},
-    // {1465.0, 200.0},
-    // {1530.0, 5.0},
-    // {845.0, 680.0},
-    // {725.0, 370.0},
-    // {145.0, 665.0},
-    // {415.0, 635.0},
-    // {510.0, 875.0},  
-    // {560.0, 365.0},
-    // {300.0, 465.0},
-    // {520.0, 585.0},
-    // {480.0, 415.0},
-    // {835.0, 625.0},
-    // {975.0, 580.0},
-    // {1215.0, 245.0},
-    // {1320.0, 315.0},
-    // {1250.0, 400.0},
-    // {660.0, 180.0},
-    // {410.0, 250.0},
-    // {420.0, 555.0},
-    // {575.0, 665.0},
-    // {1150.0, 1160.0},
-    // {700.0, 580.0},
-    // {685.0, 595.0},
-    // {685.0, 610.0},
-    // {770.0, 610.0},
-    // {795.0, 645.0},
-    // {720.0, 635.0},
-    // {760.0, 650.0},
-    // {475.0, 960.0},
-    // {95.0, 260.0},
-    // {875.0, 920.0},
-    // {700.0, 500.0},
-    // {555.0, 815.0},
-    // {830.0, 485.0},
-    // {1170.0, 65.0},
-    // {830.0, 610.0},
-    // {605.0, 625.0},
-    // {595.0, 360.0},
-    // {1340.0, 725.0},
-    // {1740.0, 245.0},
+    {565.0, 575.0},
+    {25.0, 185.0},
+    {345.0, 750.0},
+    {945.0, 685.0},
+    {845.0, 655.0},
+    {880.0, 660.0},
+    {25.0, 230.0},
+    {525.0, 1000.0},
+    {580.0, 1175.0},
+    {650.0, 1130.0},
+    {1605.0, 620.0}, 
+    {1220.0, 580.0},
+    {1465.0, 200.0},
+    {1530.0, 5.0},
+    {845.0, 680.0},
+    {725.0, 370.0},
+    {145.0, 665.0},
+    {415.0, 635.0},
+    {510.0, 875.0},  
+    {560.0, 365.0},
+    {300.0, 465.0},
+    {520.0, 585.0},
+    {480.0, 415.0},
+    {835.0, 625.0},
+    {975.0, 580.0},
+    {1215.0, 245.0},
+    {1320.0, 315.0},
+    {1250.0, 400.0},
+    {660.0, 180.0},
+    {410.0, 250.0},
+    {420.0, 555.0},
+    {575.0, 665.0},
+    {1150.0, 1160.0},
+    {700.0, 580.0},
+    {685.0, 595.0},
+    {685.0, 610.0},
+    {770.0, 610.0},
+    {795.0, 645.0},
+    {720.0, 635.0},
+    {760.0, 650.0},
+    {475.0, 960.0},
+    {95.0, 260.0},
+    {875.0, 920.0},
+    {700.0, 500.0},
+    {555.0, 815.0},
+    {830.0, 485.0},
+    {1170.0, 65.0},
+    {830.0, 610.0},
+    {605.0, 625.0},
+    {595.0, 360.0},
+    {1340.0, 725.0},
+    {1740.0, 245.0},
     //eil76
-    {22, 22},
-    {36, 26},
-    {21, 45},
-    {45, 35},
-    {55, 20},
-    {33, 34},
-    {50, 50},
-    {55, 45},
-    {26, 59},
-    {40, 66},
-    {55, 65},
-    {35, 51},
-    {62, 35},
-    {62, 57},
-    {62, 24},
-    {21, 36},
-    {33, 44},
-    {9, 56},
-    {62, 48},
-    {66, 14},
-    {44, 13},
-    {26, 13},
-    {11, 28},
-    {7, 43},
-    {17, 64},
-    {41, 46},
-    {55, 34},
-    {35, 16},
-    {52, 26},
-    {43, 26},
-    {31, 76},
-    {22, 53},
-    {26, 29},
-    {50, 40},
-    {55, 50},
-    {54, 10},
-    {60, 15},
-    {47, 66},
-    {30, 60},
-    {30, 50},
-    {12, 17},
-    {15, 14},
-    {16, 19},
-    {21, 48},
-    {50, 30},
-    {51, 42},
-    {50, 15},
-    {48, 21},
-    {12, 38},
-    {15, 56},
-    {29, 39},
-    {54, 38},
-    {55, 57},
-    {67, 41},
-    {10, 70},
-    {6, 25},
-    {65, 27},
-    {40, 60},
-    {70, 64},
-    {64, 4},
-    {36, 6},
-    {30, 20},
-    {20, 30},
-    {15, 5},
-    {50, 70},
-    {57, 72},
-    {45, 42},
-    {38, 33},
-    {50, 4},
-    {66, 8},
-    {59, 5},
-    {35, 60},
-    {27, 24},
-    {40, 20},
-    {40, 37},
-    {40, 40},
+    // {22, 22},
+    // {36, 26},
+    // {21, 45},
+    // {45, 35},
+    // {55, 20},
+    // {33, 34},
+    // {50, 50},
+    // {55, 45},
+    // {26, 59},
+    // {40, 66},
+    // {55, 65},
+    // {35, 51},
+    // {62, 35},
+    // {62, 57},
+    // {62, 24},
+    // {21, 36},
+    // {33, 44},
+    // {9, 56},
+    // {62, 48},
+    // {66, 14},
+    // {44, 13},
+    // {26, 13},
+    // {11, 28},
+    // {7, 43},
+    // {17, 64},
+    // {41, 46},
+    // {55, 34},
+    // {35, 16},
+    // {52, 26},
+    // {43, 26},
+    // {31, 76},
+    // {22, 53},
+    // {26, 29},
+    // {50, 40},
+    // {55, 50},
+    // {54, 10},
+    // {60, 15},
+    // {47, 66},
+    // {30, 60},
+    // {30, 50},
+    // {12, 17},
+    // {15, 14},
+    // {16, 19},
+    // {21, 48},
+    // {50, 30},
+    // {51, 42},
+    // {50, 15},
+    // {48, 21},
+    // {12, 38},
+    // {15, 56},
+    // {29, 39},
+    // {54, 38},
+    // {55, 57},
+    // {67, 41},
+    // {10, 70},
+    // {6, 25},
+    // {65, 27},
+    // {40, 60},
+    // {70, 64},
+    // {64, 4},
+    // {36, 6},
+    // {30, 20},
+    // {20, 30},
+    // {15, 5},
+    // {50, 70},
+    // {57, 72},
+    // {45, 42},
+    // {38, 33},
+    // {50, 4},
+    // {66, 8},
+    // {59, 5},
+    // {35, 60},
+    // {27, 24},
+    // {40, 20},
+    // {40, 37},
+    // {40, 40},
     //a100
     // {1380, 939},
     // {2848, 96},
@@ -717,7 +717,7 @@ float initial_solution() {
 /**
  *  Build final solution
  */
-bool build_solution(int idx) {
+bool build_solution(int idx, int depth) {
     int i, solution[NBR_TOWNS];
 
     int indiceCour = 0;
@@ -730,6 +730,7 @@ bool build_solution(int idx) {
         /* Test si le cycle est hamiltonien */
         for (i = 0; i < indiceCour; i++) {
             if (solution[i] == villeCour) {
+                fprintf(f, "node%d [label=\"S%d (depth=%d)\\nNon-Hamiltonian\", color=red, style=filled, fillcolor=pink];\n", idx, idx, depth);
                 return false;
             }
         }
@@ -746,8 +747,10 @@ bool build_solution(int idx) {
 
         printf("New best solution: ");
         print_solution(solution, best_eval);
+        fprintf(f, "node%d [label=\"S%d (depth=%d)\\n(%.2f)\\nBEST!\", color=limegreen, style=filled, fillcolor=lightgreen];\n", idx, idx, depth, eval);
         return true;
     }
+    fprintf(f, "node%d [label=\"S%d (depth=%d)\\n(%.2f)\", color=lightblue, style=filled, fillcolor=lightcyan];\n", idx, idx, depth, eval);
     return false;
 }
 
@@ -895,18 +898,16 @@ float min_col(float d[NBR_TOWNS][NBR_TOWNS]) {
 /**
  *  Little Algorithm
  */
-int little_algorithm(float d0[NBR_TOWNS][NBR_TOWNS], int iteration, float eval_node_parent) {
+int little_algorithm(float d0[NBR_TOWNS][NBR_TOWNS], int iteration, float eval_node_parent, int depth) {
     int myIteration = nbit++;
     if (iteration == NBR_TOWNS) {
-        bool best = build_solution(myIteration);
-        // fprintf(f, "node%d [label=\"S%d-%d\n(%.2f)\", %s];\n", myIteration, myIteration, iteration, eval_node_parent, best ? "color=limegreen" : "color=lightblue");
+        bool best = build_solution(myIteration, depth);
         return myIteration;
-        // return;
     }
 
     CycleResult cycle = detectCycles();
     if (cycle.cycle_detected) {
-        // fprintf(f, "node%d [label=\"S%d-%d\n(%.2f)\" color=red];\n", myIteration, myIteration, iteration, eval_node_parent);
+        fprintf(f, "node%d [label=\"S%d (depth=%d)\\nCycle detected\", color=red, style=filled, fillcolor=pink];\n", myIteration, myIteration, depth);
         return myIteration;
     }
 
@@ -921,7 +922,7 @@ int little_algorithm(float d0[NBR_TOWNS][NBR_TOWNS], int iteration, float eval_n
 
     /* Cut : stop the exploration of this node */
     if (best_eval >= 0 && eval_node_child >= best_eval) {
-        // fprintf(f, "node%d [label=\"S%d-%d\n(%.2f)\" color=red];\n", myIteration, myIteration, iteration, eval_node_child);
+        fprintf(f, "node%d [label=\"S%d (depth=%d)\\n(%.2f)\\nCUT\", color=red, style=filled, fillcolor=lightcoral];\n", myIteration, myIteration, depth, eval_node_child);
         return myIteration;
     }
 
@@ -975,10 +976,10 @@ int little_algorithm(float d0[NBR_TOWNS][NBR_TOWNS], int iteration, float eval_n
 // #pragma omp barrier
 #endif
     if (izero < 0 || jzero < 0) {
-        // fprintf(f, "node%d [label=\"S%d-%d\n(%.2f)\" color=red];\n", myIteration, myIteration, iteration, eval_node_child);
+        fprintf(f, "node%d [label=\"S%d (depth=%d)\\n(%.2f)\\nNo zero found\", color=orange, style=filled, fillcolor=lightyellow];\n", myIteration, myIteration, depth, eval_node_child);
         return myIteration;
     }
-    // fprintf(f, "node%d [label=\"S%d-%d\n(%.2f)\"];\n", myIteration, myIteration, iteration, eval_node_child);
+    fprintf(f, "node%d [label=\"S%d (depth=%d)\\n(%.2f)\\nPenalty: %.2f\", style=filled, fillcolor=lightgray];\n", myIteration, myIteration, depth, eval_node_child, max_penalty);
 
     next_town[izero] = jzero;
   
@@ -997,8 +998,8 @@ int little_algorithm(float d0[NBR_TOWNS][NBR_TOWNS], int iteration, float eval_n
 
     /* Explore left child node according to given choice */
     
-    int choice = little_algorithm(d2, iteration + 1, eval_node_child);
-    // fprintf(f, "node%d -> node%d [label=\"%d --> %d\"];\n", myIteration, choice, izero, jzero);
+    int choice = little_algorithm(d2, iteration + 1, eval_node_child, depth + 1);
+    fprintf(f, "node%d -> node%d [label=\"%d → %d\", color=blue, penwidth=2];\n", myIteration, choice, izero, jzero);
 
     /* Do the modification on a copy of the distance matrix */
     memcpy(d2, d, NBR_TOWNS * NBR_TOWNS * sizeof(float));
@@ -1006,8 +1007,8 @@ int little_algorithm(float d0[NBR_TOWNS][NBR_TOWNS], int iteration, float eval_n
     next_town[izero] = -1;
     d2[izero][jzero] = -1;
 
-    int nochoice = little_algorithm(d2, iteration, eval_node_child);
-    // fprintf(f, "node%d -> node%d [label=\"%d x-> %d\"];\n", myIteration, nochoice, izero, jzero);
+    int nochoice = little_algorithm(d2, iteration, eval_node_child, depth + 1);
+    fprintf(f, "node%d -> node%d [label=\"%d ✗ %d\", color=red, style=dashed];\n", myIteration, nochoice, izero, jzero);
 
     return myIteration;
 }
@@ -1030,9 +1031,11 @@ int main(int argc, char* argv[]) {
 
     compute_matrix(dist);
 
-    // f = fopen("little.dot", "w");
-    // fprintf(f, "digraph G {\n");
-    // fprintf(f, "node [shape=circle, style=filled];\n");
+    f = fopen("little.dot", "w");
+    fprintf(f, "digraph G {\n");
+    fprintf(f, "rankdir=TB;\n");
+    fprintf(f, "node [shape=box, style=\"filled,rounded\", fontname=\"Arial\"];\n");
+    fprintf(f, "edge [fontname=\"Arial\", fontsize=10];\n");
         
 
     /* initial solution */
@@ -1043,12 +1046,13 @@ int main(int argc, char* argv[]) {
     */
     int iteration = 0;
     float lowerbound = 0.0;
+    int initial_depth = 0;
 
     time_t start = time(NULL);
-    (void)little_algorithm(dist, iteration, lowerbound);
+    (void)little_algorithm(dist, iteration, lowerbound, initial_depth);
     time_t end = time(NULL);
-    // fprintf(f, "}\n");
-    // fclose(f);
+    fprintf(f, "}\n");
+    fclose(f);
 
 
     printf("Best solution:");
@@ -1056,6 +1060,9 @@ int main(int argc, char* argv[]) {
 
     printf("Time: %f seconds\n", difftime(end, start));
     printf("Number of visited nodes: %d\n", nbit-NBR_TOWNS+2);
+    // printf("\nGraphViz file generated: little.dot\n");
+    // printf("To visualize: dot -Tpng little.dot -o little.png\n");
+    // printf("Or use: dot -Tsvg little.dot -o little.svg\n");
 
     // FILE *f = fopen("evolution.csv", "w");
     // fprintf(f, "index, value\n");
