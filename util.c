@@ -64,7 +64,7 @@ bool directory_exists(char *path) {
 void compute_matrix(int size, float** coord, float* d) {
     int i, j;
 #ifdef OPENMP
-#pragma omp parallel for private(j) if(size > 10000)
+#pragma omp parallel for private(j) if(size >= 1000) schedule(dynamic, 10)
 #endif
     for (i = 0; i < size; i++) {
         float xi = coord[i][0];
@@ -151,10 +151,10 @@ float initial_solution(int size, float* dist, int* best_solution, float *best_ev
 
 #ifdef OPENMP
     if (size >= 1000) {
-#pragma omp parallel for private(j)
+#pragma omp parallel for private(j) schedule(dynamic, 1)
         for (i = 1; i < size; i++) {
             for (j = i + 1; j < size; j++) {
-                if (((i != 0) || (j != size - 1)) && ((i != 0) || (j != size - 2))) {
+                if ((j != size - 1) && (j != size - 2)) {
                     int* private_sol = (int*)calloc(size, sizeof(int));
                     memcpy(private_sol, sol, size * sizeof(int));
                     reverse(size, private_sol, i, j);
