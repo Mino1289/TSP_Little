@@ -108,6 +108,23 @@ void reverse(int size, int* solution, int i, int j) {
     }
 }
 
+static void _2opt_sequential(int size, int* sol, float* dist, float* eval) {
+    for (int i = 1; i < size; i++) {
+        for (int j = i + 1; j < size; j++) {
+            if (((i != 0) || (j != size - 1)) && ((i != 0) || (j != size - 2))) {
+                reverse(size, sol, i, j);
+                
+                float new_eval = evaluation_solution(size, sol, dist);
+                if (new_eval < *eval) {
+                    *eval = new_eval;
+                } else {
+                    reverse(size, sol, i, j);
+                }
+            }
+        }
+    }
+}
+
 /**
  * initial solution
  */
@@ -117,10 +134,12 @@ float initial_solution(int size, float* dist, int* best_solution, float *best_ev
     bool* visited = calloc(size, sizeof(bool));
     float eval = 0.0;
 
+    int i, j;
+
     sol[0] = 0;
     visited[0] = true;
 
-    for (int i = 1; i < size; i++) {
+    for (i = 1; i < size; i++) {
         int current_town = sol[i - 1];
         int next_town = find_nearest_unvisited(current_town, size, visited, dist);
 
@@ -130,27 +149,41 @@ float initial_solution(int size, float* dist, int* best_solution, float *best_ev
 
     eval = evaluation_solution(size, sol, dist);
 
-    for (int i = 1; i < size; i++) {
-        for (int j = i + 1; j < size; j++) {
-            if (((i != 0) || (j != size - 1)) && ((i != 0) || (j != size - 2))) {
-                reverse(size, sol, i, j);
-                
-                float new_eval = evaluation_solution(size, sol, dist);
-                if (new_eval < eval) {
-                    eval = new_eval;
-                } else {
-                    reverse(size, sol, i, j);
+#ifdef OPENMP
+    if (size >= 1000) {
+#pragma omp parallel for private(j)
+        for (i = 1; i < size; i++) {
+            for (j = i + 1; j < size; j++) {
+                if (((i != 0) || (j != size - 1)) && ((i != 0) || (j != size - 2))) {
+                    int* private_sol = (int*)calloc(size, sizeof(int));
+                    memcpy(private_sol, sol, size * sizeof(int));
+                    reverse(size, private_sol, i, j);
+                    
+                    float new_eval = evaluation_solution(size, private_sol, dist);
+#pragma omp critical
+                    {
+                        if (new_eval < eval) {
+                            eval = new_eval;
+                            memcpy(sol, private_sol, size * sizeof(int));
+                        }
+                    }
+                    free(private_sol);
                 }
             }
         }
+    } else {
+        _2opt_sequential(size, sol, dist, &eval);
     }
+#else
+    _2opt_sequential(size, sol, dist, &eval);
+#endif
 
 
     printf("Initial solution ");
     print_solution(size, sol, eval);
 
     /* initialize best solution with initial solution */
-    for (int i = 0; i < size; i++)
+    for (i = 0; i < size; i++)
         best_solution[i] = sol[i];
     *best_eval = eval;
 
