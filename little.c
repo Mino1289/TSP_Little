@@ -226,23 +226,15 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
     free(next_town);
 
 #ifdef OPENMP
-#pragma omp task if (iteration < 20)
+#pragma omp task if (iteration < size)
 #endif
     {
         little_algorithm(size, d3, baseDist, iteration, eval_node_child, best_solution, best_eval, next_town_child2, config);
     }
 
-// #ifdef OPENMP
-// #pragma omp task //if (iteration < size / 2)
-// #endif
     {
         little_algorithm(size, d2, baseDist, iteration + 1, eval_node_child, best_solution, best_eval, next_town_child1, config);
     }
-
-
-#ifdef OPENMP
-// #pragma omp taskwait // On attend que les deux branches aient fini leur exploration
-#endif
 
     return;
 }
