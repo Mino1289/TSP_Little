@@ -22,7 +22,7 @@ configuration_t *make_configuration(configuration_t *base_configuration, char *a
                 break;
             
             case 'r':
-                strncpy(base_configuration->filename, optarg, STR_MAX_LEN);
+                strncpy(base_configuration->filename, optarg, STR_MAX_LEN-1);
                 break;
             
             case 'n':
