@@ -65,6 +65,19 @@
  * berlin52 30 towns test case seq: 553s vs omp: N4: N8: 413s N16: 245s N24: 326s N32: 362s
  */
 
+#ifndef OPENMP
+
+#ifndef CLOCK_MONOTONIC
+#define CLOCK_MONOTONIC 1
+#endif
+
+double omp_get_wtime() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec + ts.tv_nsec / 1e9;
+}
+#endif
+
 int main(int argc, char *argv[]) {
 
     configuration_t config = {
@@ -117,22 +130,22 @@ int main(int argc, char *argv[]) {
     int* best_solution = (int *)malloc(size * sizeof(int));
     float best_eval = 0.0;
 
-    time_t start, end;
-    start = time(NULL);
+    double time;
+    time = -omp_get_wtime();
     compute_matrix(size, coord, dist);
-    end = time(NULL);
+    time += omp_get_wtime();
     if (config.is_verbose) {
-        printf("Distance matrix computed in %f seconds.\n", difftime(end, start));
+        printf("Distance matrix computed in %f seconds.\n", time);
     }
     for (int i = 0; i < size * size; i++) {
         distNoModif[i] = dist[i];
     }
 
-    start = time(NULL);
+    time = -omp_get_wtime();
     initial_solution(size, dist, best_solution, &best_eval);
-    end = time(NULL);
+    time += omp_get_wtime();
     if (config.is_verbose) {
-        printf("Initial solution computed in %f seconds.\n", difftime(end, start));
+        printf("Initial solution computed in %f seconds.\n", time);
     }
 
     if (config.init) {
@@ -142,7 +155,7 @@ int main(int argc, char *argv[]) {
     int iteration = 0;
     float lowerbound = 0.0;
 
-    start = time(NULL);
+    time = -omp_get_wtime();
 #ifdef OPENMP
 #pragma omp parallel
 #endif
@@ -152,7 +165,7 @@ int main(int argc, char *argv[]) {
 #endif
     little_algorithm(size, dist, distNoModif, iteration, lowerbound, best_solution, &best_eval, next_town, config);
     }
-    end = time(NULL);
+    time += omp_get_wtime();
 
     // fprintf(f, "}\n");
     // fclose(f);
@@ -161,7 +174,7 @@ int main(int argc, char *argv[]) {
     printf("Best solution:");
     print_solution(size, best_solution, best_eval);
 
-    printf("Time: %f seconds\n", difftime(end, start));
+    printf("Time: %f seconds\n", time);
     // printf("Number of visited nodes: %d\n", nbit-NBR_TOWNS+2);
 
     free(best_solution);
