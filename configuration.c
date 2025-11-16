@@ -75,7 +75,12 @@ void display_configuration(configuration_t *configuration) {
     printf("number_of_cities: %d\n", configuration->number_of_cities);
     printf("is_verbose: %s\n", configuration->is_verbose ? "true" : "false");
     printf("init_only: %s\n", configuration->init ? "true" : "false");
-    printf("num_threads: %d\n", configuration->num_threads);
+    #ifdef OPENMP
+    char omp_on_off[] = "threads; OPENMP Available";
+    #else
+    char omp_on_off[] = "threads; OPENMP Disabled";
+    #endif
+    printf("num_threads: %d\t%s\n", configuration->num_threads, omp_on_off);
 }
 
 bool is_configuration_valid(configuration_t *configuration) {
