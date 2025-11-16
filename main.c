@@ -117,14 +117,23 @@ int main(int argc, char *argv[]) {
     int* best_solution = (int *)malloc(size * sizeof(int));
     float best_eval = 0.0;
 
-
+    time_t start, end;
+    start = time(NULL);
     compute_matrix(size, coord, dist);
-    
+    end = time(NULL);
+    if (config.is_verbose) {
+        printf("Distance matrix computed in %f seconds.\n", difftime(end, start));
+    }
     for (int i = 0; i < size * size; i++) {
         distNoModif[i] = dist[i];
-    }    
-    
+    }
+
+    start = time(NULL);
     initial_solution(size, dist, best_solution, &best_eval);
+    end = time(NULL);
+    if (config.is_verbose) {
+        printf("Initial solution computed in %f seconds.\n", difftime(end, start));
+    }
 
     if (config.init) {
         return 0;
@@ -133,7 +142,7 @@ int main(int argc, char *argv[]) {
     int iteration = 0;
     float lowerbound = 0.0;
 
-    time_t start = time(NULL);
+    start = time(NULL);
 #ifdef OPENMP
 #pragma omp parallel
 #endif
@@ -143,7 +152,7 @@ int main(int argc, char *argv[]) {
 #endif
     little_algorithm(size, dist, distNoModif, iteration, lowerbound, best_solution, &best_eval, next_town, config);
     }
-    time_t end = time(NULL);
+    end = time(NULL);
 
     // fprintf(f, "}\n");
     // fclose(f);
