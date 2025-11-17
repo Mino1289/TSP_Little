@@ -14,7 +14,7 @@ void readTSPFile_coords(char *filename, int size, float **coords) {
     while (fgets(line, sizeof(line), file) != NULL) {
         if (strncmp(line, "NODE_COORD_SECTION", 18) == 0) {
             break;
-    }  
+        }
     }
 
     *coords = (float *)malloc((size) * (2) * sizeof(float));
@@ -144,7 +144,7 @@ bool directory_exists(char *path) {
 void compute_matrix(int size, float** coord, float* d) {
     int i, j;
 #ifdef OPENMP
-#pragma omp parallel for private(j) if(size >= 1000) schedule(dynamic, 10)
+#pragma omp parallel for private(j) shared(d, coord) if(size >= 1000) schedule(dynamic, 10)
 #endif
     for (i = 0; i < size; i++) {
         float xi = coord[i][0];
@@ -189,15 +189,24 @@ void reverse(int size, int* solution, int i, int j) {
 }
 
 static void _2opt_sequential(int size, int* sol, float* dist, float* eval) {
-    for (int i = 1; i < size; i++) {
-        for (int j = i + 1; j < size; j++) {
-            if (((i != 0) || (j != size - 1)) && ((i != 0) || (j != size - 2))) {
+    bool improved = true;
+    while (improved) {
+        improved = false;
+        for (int i = 1; i < size - 1; i++) {
+            for (int j = i + 1; j < size; j++) {
+                // Simple check to avoid reversing single elements
+                if (j - i < 2) continue;
+
+                float current_eval = *eval;
+                
                 reverse(size, sol, i, j);
                 
                 float new_eval = evaluation_solution(size, sol, dist);
-                if (new_eval < *eval) {
+                if (new_eval < current_eval) {
                     *eval = new_eval;
+                    improved = true;
                 } else {
+                    // Revert if no improvement
                     reverse(size, sol, i, j);
                 }
             }
@@ -229,34 +238,8 @@ float initial_solution(int size, float* dist, int* best_solution, float *best_ev
 
     eval = evaluation_solution(size, sol, dist);
 
-#ifdef OPENMP
-    if (size >= 1000) {
-#pragma omp parallel for private(j) schedule(dynamic, 1)
-        for (i = 1; i < size; i++) {
-            for (j = i + 1; j < size; j++) {
-                if ((j != size - 1) && (j != size - 2)) {
-                    int* private_sol = (int*)calloc(size, sizeof(int));
-                    memcpy(private_sol, sol, size * sizeof(int));
-                    reverse(size, private_sol, i, j);
-                    
-                    float new_eval = evaluation_solution(size, private_sol, dist);
-#pragma omp critical
-                    {
-                        if (new_eval < eval) {
-                            eval = new_eval;
-                            memcpy(sol, private_sol, size * sizeof(int));
-                        }
-                    }
-                    free(private_sol);
-                }
-            }
-        }
-    } else {
-        _2opt_sequential(size, sol, dist, &eval);
-    }
-#else
+    // Le 2-opt est intrinsèquement séquentiel (améliorations cumulatives)
     _2opt_sequential(size, sol, dist, &eval);
-#endif
 
 
     printf("Initial solution ");
