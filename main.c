@@ -40,7 +40,7 @@
  * 30 towns : (4444.908) -> Best solution:(3874.178): 0 25 9 12 28 7 15 21 13 2 18 26 16 4 11 1 20 19 6 3 8 27 24 22 17 5 10 23 14 29 
  * 35 towns : (4562.645) -> Best solution:(4152.320): 0 29 33 14 23 10 5 17 22 32 24 27 8 3 30 6 19 20 1 11 4 16 26 18 2 13 21 15 31 7 28 12 9 25 34 
  * 40 towns : (4416.683) -> Best solution:(4215.666): 0 35 34 25 9 12 28 39 7 38 31 15 21 13 2 18 26 16 4 11 1 20 19 6 30 3 8 27 24 32 22 17 5 23 10 36 14 33 37 29 
- * 45 towns : (4752.446)
+ * 45 towns : (4752.446) -> Best solution:(4250.397): 0 43 44 35 34 25 9 40 41 12 28 39 7 38 31 15 21 13 2 18 26 16 4 11 1 20 19 6 30 3 8 27 24 32 22 17 5 23 10 36 14 33 37 42 29 
  * 50 towns : (4966.106)
  * 52 towns : (5225.797)
  * 55 towns : (5493.776)
@@ -54,9 +54,9 @@
  */
 
 /** comp seq / omp
- * eil76 50 towns test case seq: 37s vs omp: N2: 54s N4: 26s N8: 21s N16: 13s N24: 15s N32: 10s
- * eil76 55 towns test case seq: 447s vs omp: N2: N4: 689s N8: 58s N16: 145s
- * eil76 60 towns test case seq:  vs omp: N8: 
+ * eil76 50 towns seq: 37s vs omp: N2: 54s N4: 26s N8: 21s N16: 13s N24: 15s N32: 10s
+ * eil76 55 towns seq: 447s vs omp: N2: N4: 689s N8: 58s N16: 145s
+ * eil76 60 towns seq:  vs omp: N8: 
  * 
  * kroA100 40 towns test case seq: 130s vs omp:N8: 246s N16: 44s N24: 76s
  * a280 35 towns test case seq: 73s vs omp: N4: 146s N8: 126s N16: 94s N24: 76s N32: 84s
@@ -64,6 +64,19 @@
  * NO THREADS DEPTH LIMIT
  * berlin52 30 towns test case seq: 553s vs omp: N4: N8: 413s N16: 245s N24: 326s N32: 362s
  */
+
+#ifndef OPENMP
+
+#ifndef CLOCK_MONOTONIC
+#define CLOCK_MONOTONIC 1
+#endif
+
+double omp_get_wtime() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec + ts.tv_nsec / 1e9;
+}
+#endif
 
 int main(int argc, char *argv[]) {
 
@@ -77,23 +90,22 @@ int main(int argc, char *argv[]) {
     make_configuration(&config, argv, argc);
 
     if (!is_configuration_valid(&config)) {
-        printf("\nUsage: %s -r <filename> -n <number_of_cities> [-v] [-i] -f <config-file>\n", argv[0]);
+        printf("\nUsage: %s -r <filename> -n <number_of_cities> -t <num_threads> [-v] [-i] -f <config-file>\n", argv[0]);
         display_configuration(&config);
         printf("\nExiting\n");
         return -1;
     }
 
 #ifdef OPENMP
+#ifdef NUM_THREADS
     omp_set_num_threads(NUM_THREADS);
+#else
+    omp_set_num_threads(config.num_threads);
+#endif
 #endif
 
     if (config.is_verbose) {
         display_configuration(&config);
-#ifdef OPENMP
-        printf("Number of threads: %d\n", NUM_THREADS);
-        //printf("Number of tasks per thread: %d\n", NUM_TASKS_PER_THREAD(config.number_of_cities));
-        printf("\n");
-#endif
     }
 
 
@@ -118,14 +130,23 @@ int main(int argc, char *argv[]) {
     int* best_solution = (int *)malloc(size * sizeof(int));
     float best_eval = 0.0;
 
-
+    double time;
+    time = -omp_get_wtime();
     compute_matrix(size, coord, dist);
-    
+    time += omp_get_wtime();
+    if (config.is_verbose) {
+        printf("Distance matrix computed in %f seconds.\n", time);
+    }
     for (int i = 0; i < size * size; i++) {
         distNoModif[i] = dist[i];
-    }    
-    
+    }
+
+    time = -omp_get_wtime();
     initial_solution(size, dist, best_solution, &best_eval);
+    time += omp_get_wtime();
+    if (config.is_verbose) {
+        printf("Initial solution computed in %f seconds.\n", time);
+    }
 
     if (config.init) {
         return 0;
@@ -134,7 +155,7 @@ int main(int argc, char *argv[]) {
     int iteration = 0;
     float lowerbound = 0.0;
 
-    time_t start = time(NULL);
+    time = -omp_get_wtime();
 #ifdef OPENMP
 #pragma omp parallel
 #endif
@@ -144,7 +165,7 @@ int main(int argc, char *argv[]) {
 #endif
     little_algorithm(size, dist, distNoModif, iteration, lowerbound, best_solution, &best_eval, next_town, config);
     }
-    time_t end = time(NULL);
+    time += omp_get_wtime();
 
     // fprintf(f, "}\n");
     // fclose(f);
@@ -153,7 +174,7 @@ int main(int argc, char *argv[]) {
     printf("Best solution:");
     print_solution(size, best_solution, best_eval);
 
-    printf("Time: %f seconds\n", difftime(end, start));
+    printf("Time: %f seconds\n", time);
     // printf("Number of visited nodes: %d\n", nbit-NBR_TOWNS+2);
 
     free(best_solution);

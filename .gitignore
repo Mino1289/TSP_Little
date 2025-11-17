@@ -1,2 +1,6 @@
 little
+littleR
 *.o
+*.dot
+*.svg
+*.ipynb

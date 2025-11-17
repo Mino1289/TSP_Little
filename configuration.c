@@ -6,11 +6,12 @@ configuration_t *make_configuration(configuration_t *base_configuration, char *a
         {.name="init",.has_arg=0,.flag=0,.val='i'},
         {.name="read-file",.has_arg=1,.flag=0,.val='r'},
         {.name="cities",.has_arg=1,.flag=0,.val='n'},
+        {.name="threads",.has_arg=1,.flag=0,.val='t'},
         {.name=0,.has_arg=0,.flag=0,.val=0},
     };
     int opt;
 
-    while ((opt = getopt_long(argc, argv, "vir:n:", my_opts, NULL)) != EOF) {
+    while ((opt = getopt_long(argc, argv, "vir:n:t:", my_opts, NULL)) != EOF) {
         switch (opt) {
             case 'v':
                 base_configuration->is_verbose = true;
@@ -21,11 +22,15 @@ configuration_t *make_configuration(configuration_t *base_configuration, char *a
                 break;
             
             case 'r':
-                strncpy(base_configuration->filename, optarg, STR_MAX_LEN);
+                strncpy(base_configuration->filename, optarg, STR_MAX_LEN-1);
                 break;
             
             case 'n':
                 base_configuration->number_of_cities = strtoul(optarg, NULL, 10);
+                break;
+            
+            case 't':
+                base_configuration->num_threads = strtoul(optarg, NULL, 10);
                 break;
 
             default:
@@ -70,6 +75,12 @@ void display_configuration(configuration_t *configuration) {
     printf("number_of_cities: %d\n", configuration->number_of_cities);
     printf("is_verbose: %s\n", configuration->is_verbose ? "true" : "false");
     printf("init_only: %s\n", configuration->init ? "true" : "false");
+    #ifdef OPENMP
+    char omp_on_off[] = "threads; OPENMP Available";
+    #else
+    char omp_on_off[] = "threads; OPENMP Disabled";
+    #endif
+    printf("num_threads: %d\t%s\n", configuration->num_threads, omp_on_off);
 }
 
 bool is_configuration_valid(configuration_t *configuration) {
@@ -78,5 +89,12 @@ bool is_configuration_valid(configuration_t *configuration) {
         !path_to_file_exists(configuration->filename)) {
             return false;
         }
+    if (configuration->num_threads == 0) {
+#ifdef OPENMP
+        configuration->num_threads = omp_get_max_threads();
+#else
+        configuration->num_threads = 1;
+#endif
+    }
     return true;
 }

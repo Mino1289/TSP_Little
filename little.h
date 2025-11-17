@@ -5,15 +5,6 @@
 
 #define BIG_VALUE 1e9
 
-#ifdef OPENMP
-#ifndef NUM_THREADS
-#define NUM_THREADS 4
-#endif
-#define TASKS(n) ((n) / NUM_THREADS)
-
-#define NUM_TASKS_PER_THREAD(size) TASKS(size)
-#endif
-
 
 bool detectCycles(int size, int* next_town);
 

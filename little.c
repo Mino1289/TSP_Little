@@ -198,13 +198,13 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
         return;
     }
 
-    
+
     float* d2 = malloc(size * size * sizeof(float));
     memcpy(d2, d, size * size * sizeof(float));
-    
+
     float* d3 = malloc(size * size * sizeof(float));
     memcpy(d3, d, size * size * sizeof(float));
-    
+
     free(d);
     // D2
     for (k = 0; k < size; k++) {
@@ -213,7 +213,7 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
     }
     d2[jzero * size + izero] = -1;
     // D3
-    d3[izero * size + jzero] = -1; 
+    d3[izero * size + jzero] = -1;
 
     int* next_town_child1 = malloc(size * sizeof(int));
     memcpy(next_town_child1, next_town, size * sizeof(int));
@@ -222,26 +222,19 @@ void little_algorithm(int size, float* dist, float* baseDist, int iteration, flo
     int* next_town_child2 = malloc(size * sizeof(int));
     memcpy(next_town_child2, next_town, size * sizeof(int));
     next_town_child2[izero] = -1;
-    
+
     free(next_town);
 
 #ifdef OPENMP
-#pragma omp task //if (iteration < size / 2)
-#endif
-    {
-        little_algorithm(size, d2, baseDist, iteration + 1, eval_node_child, best_solution, best_eval, next_town_child1, config);
-    }
-
-#ifdef OPENMP
-#pragma omp task //if (iteration < size / 2)
+#pragma omp task if (iteration < size)
 #endif
     {
         little_algorithm(size, d3, baseDist, iteration, eval_node_child, best_solution, best_eval, next_town_child2, config);
     }
-    
-    #ifdef OPENMP
-    #pragma omp taskwait // On attend que les deux branches aient fini leur exploration
-    #endif
-    
+
+    {
+        little_algorithm(size, d2, baseDist, iteration + 1, eval_node_child, best_solution, best_eval, next_town_child1, config);
+    }
+
     return;
 }
