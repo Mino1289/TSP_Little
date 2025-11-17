@@ -110,33 +110,49 @@ int main(int argc, char *argv[]) {
 
 
     int size = config.number_of_cities;
+    double time;
     float* coordsList;
-    readTSPFile(config.filename, size, &coordsList);
-
-    float** coord = (float **)malloc(size * sizeof(float *));
-    float* dist = (float *)malloc(size * size * sizeof(float ));
+    
+    float* dist = (float *)malloc(size * size * sizeof(float));
     float* distNoModif = (float *)malloc(size * size * sizeof(float ));
-
     int* next_town = (int *)malloc(size * sizeof(int));
-
     for (int i = 0; i < size; i++) {
-        coord[i] = (float *)malloc(2 * sizeof(float));
-        coord[i][0] = coordsList[i * 2];
-        coord[i][1] = coordsList[i * 2 + 1];
-
         next_town[i] = -1;
     }
 
+    if (config.is_data_matrix) {
+        printf("Reading distance matrix from file %s\n", config.filename);
+        readTSPFile_lowerMatrix(config.filename, size, dist);
+    } else {
+        coordsList = NULL;
+        readTSPFile_coords(config.filename, size, &coordsList);
+        
+        float** coord = (float **)malloc(size * sizeof(float *));
+        
+        for (int i = 0; i < size; i++) {
+            coord[i] = (float *)malloc(2 * sizeof(float));
+            coord[i][0] = coordsList[i * 2];
+            coord[i][1] = coordsList[i * 2 + 1];
+        }
+
+        free(coordsList);
+
+        
+        time = -omp_get_wtime();
+        compute_matrix(size, coord, dist);
+        time += omp_get_wtime();
+        if (config.is_verbose) {
+            printf("Distance matrix computed in %f seconds.\n", time);
+        }
+
+        for (int i = 0; i < size; i++) {
+            free(coord[i]);
+        }
+        free(coord);
+    }
     int* best_solution = (int *)malloc(size * sizeof(int));
     float best_eval = 0.0;
 
-    double time;
-    time = -omp_get_wtime();
-    compute_matrix(size, coord, dist);
-    time += omp_get_wtime();
-    if (config.is_verbose) {
-        printf("Distance matrix computed in %f seconds.\n", time);
-    }
     for (int i = 0; i < size * size; i++) {
         distNoModif[i] = dist[i];
     }
@@ -179,13 +195,9 @@ int main(int argc, char *argv[]) {
 
     free(best_solution);
     // free(next_town);
-    for (int i = 0; i < size; i++) {
-        free(coord[i]);
-    }
-    free(coord);
+
     // free(dist);
     free(distNoModif);
-    free(coordsList);
 
     return 0;
 }

@@ -19,6 +19,7 @@ typedef struct configuration {
     bool init;
     bool is_verbose;
     uint16_t num_threads;
+    bool is_data_matrix;
 } configuration_t;
 
 configuration_t *make_configuration(configuration_t *base_configuration, char *argv[], int argc);

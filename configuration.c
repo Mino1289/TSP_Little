@@ -7,11 +7,12 @@ configuration_t *make_configuration(configuration_t *base_configuration, char *a
         {.name="read-file",.has_arg=1,.flag=0,.val='r'},
         {.name="cities",.has_arg=1,.flag=0,.val='n'},
         {.name="threads",.has_arg=1,.flag=0,.val='t'},
+        {.name="data-matrix",.has_arg=0,.flag=0,.val='m'},
         {.name=0,.has_arg=0,.flag=0,.val=0},
     };
     int opt;
 
-    while ((opt = getopt_long(argc, argv, "vir:n:t:", my_opts, NULL)) != EOF) {
+    while ((opt = getopt_long(argc, argv, "vimr:n:t:", my_opts, NULL)) != EOF) {
         switch (opt) {
             case 'v':
                 base_configuration->is_verbose = true;
@@ -19,6 +20,10 @@ configuration_t *make_configuration(configuration_t *base_configuration, char *a
             
             case 'i':
                 base_configuration->init = true;
+                break;
+
+            case 'm':
+                base_configuration->is_data_matrix = true;
                 break;
             
             case 'r':
@@ -81,6 +86,7 @@ void display_configuration(configuration_t *configuration) {
     char omp_on_off[] = "threads; OPENMP Disabled";
     #endif
     printf("num_threads: %d\t%s\n", configuration->num_threads, omp_on_off);
+    printf("is_data_matrix: %s\n", configuration->is_data_matrix ? "true" : "false");
 }
 
 bool is_configuration_valid(configuration_t *configuration) {

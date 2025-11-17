@@ -1,6 +1,6 @@
 #include "util.h"
 
-void readTSPFile(char *filename, int size, float **coords) {
+void readTSPFile_coords(char *filename, int size, float **coords) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         fprintf(stderr, "Error: Could not open file %s\n", filename);
@@ -8,22 +8,102 @@ void readTSPFile(char *filename, int size, float **coords) {
     }
 
     char line[128];
-    int i;
+    int i = 0;
 
-    // skip the first 6 lines
-    for (i = 0; i < 6; i++) {
-        char* c = fgets(line, sizeof(line), file);
-        (void)c;
+    // skip the first lines that are not coordinates
+    while (fgets(line, sizeof(line), file) != NULL) {
+        if (strncmp(line, "NODE_COORD_SECTION", 18) == 0) {
+            break;
     }  
+    }
+
     *coords = (float *)malloc((size) * (2) * sizeof(float));
     float* d = *coords;
 
-    i = 0;
     while (fgets(line, sizeof(line), file) != NULL && i <= size) {
         if (sscanf(line, "%d %f %f", &i, &d[0], &d[1]) == 3) {
             d += 2;
             i++;    
         }
+    }
+
+    fclose(file);
+}
+
+void readTSPFile_lowerMatrix(char *filename, int size, float *dists) {
+// NAME: hk48
+// TYPE: TSP
+// COMMENT: 48-city problem (Held/Karp)
+// DIMENSION: 48
+// EDGE_WEIGHT_TYPE: EXPLICIT
+// EDGE_WEIGHT_FORMAT: LOWER_DIAG_ROW 
+// EDGE_WEIGHT_SECTION
+// 0  273    0 1272  999    0  744  809 1519    0 ....
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        fprintf(stderr, "Error: Could not open file %s\n", filename);
+        exit(1);
+    }
+
+    char line[STR_MAX_LEN];
+
+    // extract dimension
+    int file_size = -1;
+    while (fgets(line, sizeof(line), file) != NULL) {
+        if (strncmp(line, "DIMENSION:", 10) == 0) {
+            file_size = atoi(line + 10);
+        }
+    }
+
+    if (file_size == -1) {
+        fprintf(stderr, "Error: Could not find DIMENSION in file %s\n", filename);
+        fclose(file);
+        exit(1);
+    }
+
+    // On se place au début du fichier pour la suite de la lecture
+    rewind(file);
+
+    float* temp_dist_matrix = dists;
+    if (file_size != size) {
+        temp_dist_matrix = (float *)malloc(file_size * file_size * sizeof(float));
+        if (temp_dist_matrix == NULL) {
+            fprintf(stderr, "Error: Memory allocation failed for temp_dist_matrix\n");
+            fclose(file);
+            exit(1);
+        }
+    }
+
+    // skip the nexts lines that are not coordinates
+    while (fgets(line, sizeof(line), file) != NULL) {
+        if (strncmp(line, "EDGE_WEIGHT_SECTION", 19) == 0) {
+            break;
+        }
+    }
+
+    // Read the lower diagonal row matrix
+    for (int i = 0; i < file_size; i++) {
+        for (int j = 0; j <= i; j++) {
+            int value;
+            if (fscanf(file, "%d", &value) == 1) {
+                temp_dist_matrix[i * file_size + j] = (float)value;
+                temp_dist_matrix[j * file_size + i] = (float)value; // Since it's a symmetric matrix
+            }
+        }
+    }
+
+    // If the requested size is different, crop the matrix
+    if (file_size != size) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (i == j) {
+                    dists[i * size + j] = -1;
+                    continue;
+                }
+                dists[i * size + j] = temp_dist_matrix[i * file_size + j];
+            }
+        }
+        free(temp_dist_matrix);
     }
 
     fclose(file);

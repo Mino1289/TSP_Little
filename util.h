@@ -13,7 +13,9 @@
 #include "configuration.h"
 
 
-void readTSPFile(char *filename, int size, float** coords);
+void readTSPFile_coords(char *filename, int size, float** coords);
+
+void readTSPFile_lowerMatrix(char *filename, int size, float *dists);
 
 bool path_to_file_exists(char *path);
 
